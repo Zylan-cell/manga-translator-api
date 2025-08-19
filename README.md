@@ -1,370 +1,91 @@
-\# Manga Translator - Backend API
+# Manga Translator - Backend API
 
-
-
-This is the backend server for the Manga Translator application. It handles heavy-lifting tasks like object detection, optical character recognition (OCR), inpainting, and text translation. The API is built with FastAPI.
-
-
+This is the backend server for the Manga Translator application.  
+It handles heavy-lifting tasks like object detection, optical character recognition (OCR), inpainting, and text translation.  
+The API is built with [FastAPI](https://fastapi.tiangolo.com/).
 
 ---
 
+## ✨ Features
 
-
-\## ✨ Features
-
-
-
-\- \*\*Panel Detection:\*\* Detects comic panels to determine reading order.  
-
-\- \*\*Bubble Detection:\*\* Uses a YOLO model to find speech bubbles in an image.  
-
-\- \*\*Text Recognition (OCR):\*\* Extracts Japanese text from detected bubbles using Manga-OCR.  # Manga Translator - Backend API
-
-
-
-This is the backend server for the Manga Translator application. It handles heavy-lifting tasks like object detection, optical character recognition (OCR), inpainting, and text translation. The API is built with FastAPI.
-
-
+- **Panel Detection:** Detects comic panels to determine reading order.  
+- **Bubble Detection:** Uses a YOLO model to find speech bubbles in an image.  
+- **Text Recognition (OCR):** Extracts Japanese text from detected bubbles using Manga-OCR.  
+- **Inpainting:** Removes the original text from the bubbles, preparing them for translation.  
+- **Translation:** Connects to an LM Studio instance (or any OpenAI-compatible API) to translate text.  
 
 ---
 
+## 🛠️ Setup and Installation
 
+### Prerequisites
 
-\## ✨ Features
+- Python 3.10+  
+- `pip` and `virtualenv`  
+- Git  
+- (Optional but recommended) NVIDIA GPU with CUDA installed for performance  
 
+### Installation Steps
 
+1. **Clone the repository**
+   ```bash
+   git clone https://github.com/YOUR_USERNAME/manga-translator-api.git
+   cd manga-translator-api
+   ```
 
-\- \*\*Panel Detection:\*\* Detects comic panels to determine reading order.  
+2. **Create and activate a virtual environment**
+   ```bash
+   python -m venv .env
 
-\- \*\*Bubble Detection:\*\* Uses a YOLO model to find speech bubbles in an image.  
+   # On Windows
+   .\.env\Scripts\activate
 
-\- \*\*Text Recognition (OCR):\*\* Extracts Japanese text from detected bubbles using Manga-OCR.  
+   # On macOS/Linux
+   source .env/bin/activate
+   ```
 
-\- \*\*Inpainting:\*\* Removes the original text from the bubbles, preparing them for translation.  
+3. **Install Python dependencies**
+   ```bash
+   pip install -r requirements.txt
+   ```
 
-\- \*\*Translation:\*\* Connects to an LM Studio instance (or any OpenAI-compatible API) to translate text.  
-
-
-
----
-
-
-
-\## 🛠️ Setup and Installation
-
-
-
-\### Prerequisites
-
-
-
-\- Python 3.10+  
-
-\- `pip` and `virtualenv`  
-
-\- Git  
-
-\- (Optional but recommended) NVIDIA GPU with CUDA installed for performance.  
-
-
-
-\### Installation Steps
-
-
-
-1\. \*\*Clone the repository\*\*
-
-&nbsp;  ```bash
-
-&nbsp;  git clone https://github.com/YOUR\_USERNAME/manga-translator-api.git
-
-&nbsp;  cd manga-translator-api
-
-&nbsp;  ```
-
-
-
-2\. \*\*Create and activate a virtual environment\*\*
-
-&nbsp;  ```bash
-
-&nbsp;  python -m venv .env
-
-
-
-&nbsp;  # On Windows
-
-&nbsp;  .\\.env\\Scripts\\activate
-
-
-
-&nbsp;  # On macOS/Linux
-
-&nbsp;  source .env/bin/activate
-
-&nbsp;  ```
-
-
-
-3\. \*\*Install Python dependencies\*\*
-
-&nbsp;  ```bash
-
-&nbsp;  pip install -r requirements.txt
-
-&nbsp;  ```
-
-
-
-4\. \*\*Download Models\*\*  
-
-&nbsp;  The required models are not included in this repository. You need to download them and place them in the `weights/` directory:
-
-&nbsp;  - `bubbles\_yolo.pt` — speech bubble detection model  
-
-&nbsp;  - `magiv3/` — directory for the panel detection model  
-
-&nbsp;  - Manga-OCR and inpainting models will be downloaded automatically on first run to their respective cache folders  
-
-
+4. **Download Models**  
+   Place the required models into the `weights/` directory:
+   - `bubbles_yolo.pt` — speech bubble detection model  
+   - `magiv3/` — panel detection model directory  
+   - Manga-OCR and inpainting models will be downloaded automatically on first run  
 
 ---
 
+## 🚀 How to Run
 
+### Windows
+```bash
+run_server.bat
+```
 
-\## 🚀 How to Run
+### macOS/Linux (example `run_server.sh`)
+```sh
+#!/bin/bash
+source .env/bin/activate
+export HF_HOME="./weights/hf"
+# ... set other environment variables ...
+uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+```
 
+The server will start on `http://0.0.0.0:8000`.  
+When it starts, it prints the local network IP to connect from your phone:
 
-
-1\. \*\*Run the server\*\*
-
-
-
-&nbsp;  On \*\*Windows\*\*:
-
-&nbsp;  ```bash
-
-&nbsp;  run\_server.bat
-
-&nbsp;  ```
-
-
-
-&nbsp;  On \*\*macOS/Linux\*\* (create a `run\_server.sh`):
-
-&nbsp;  ```sh
-
-&nbsp;  #!/bin/bash
-
-&nbsp;  source .env/bin/activate
-
-&nbsp;  export HF\_HOME="./weights/hf"
-
-&nbsp;  # ... set other environment variables ...
-
-&nbsp;  uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
-
-&nbsp;  ```
-
-
-
-2\. The server will start on `http://0.0.0.0:8000`.  
-
-&nbsp;  When it starts, it will print the local network IP address you should use in the Tauri application to connect from your phone.
-
-
-
-&nbsp;  Example:
-
-&nbsp;  ```
-
-&nbsp;  ==> http://192.168.1.5:8000 <==
-
-&nbsp;  ```
-
-
+```
+==> http://192.168.1.5:8000 <==
+```
 
 ---
 
-
-
-\## 📡 API Endpoints
-
-
-
-\- `POST /detect\_panels` — Detects comic panels  
-
-\- `POST /detect\_text\_areas` — Detects speech bubbles  
-
-\- `POST /recognize\_images\_batch` — Performs OCR on a batch of cropped bubble images  
-
-\- `POST /inpaint\_auto\_text` — Automatically inpaints text within specified bounding boxes  
-
-\- `POST /v1/chat/completions` — Proxies translation requests to an OpenAI-compatible API  
-
-
-
-\- \*\*Inpainting:\*\* Removes the original text from the bubbles, preparing them for translation.  
-
-\- \*\*Translation:\*\* Connects to an LM Studio instance (or any OpenAI-compatible API) to translate text.  
-
-
-
----
-
-
-
-\## 🛠️ Setup and Installation
-
-
-
-\### Prerequisites
-
-
-
-\- Python 3.10+  
-
-\- `pip` and `virtualenv`  
-
-\- Git  
-
-\- (Optional but recommended) NVIDIA GPU with CUDA installed for performance.  
-
-
-
-\### Installation Steps
-
-
-
-1\. \*\*Clone the repository\*\*
-
-&nbsp;  ```bash
-
-&nbsp;  git clone https://github.com/YOUR\_USERNAME/manga-translator-api.git
-
-&nbsp;  cd manga-translator-api
-
-&nbsp;  ```
-
-
-
-2\. \*\*Create and activate a virtual environment\*\*
-
-&nbsp;  ```bash
-
-&nbsp;  python -m venv .env
-
-
-
-&nbsp;  # On Windows
-
-&nbsp;  .\\.env\\Scripts\\activate
-
-
-
-&nbsp;  # On macOS/Linux
-
-&nbsp;  source .env/bin/activate
-
-&nbsp;  ```
-
-
-
-3\. \*\*Install Python dependencies\*\*
-
-&nbsp;  ```bash
-
-&nbsp;  pip install -r requirements.txt
-
-&nbsp;  ```
-
-
-
-4\. \*\*Download Models\*\*  
-
-&nbsp;  The required models are not included in this repository. You need to download them and place them in the `weights/` directory:
-
-&nbsp;  - `bubbles\_yolo.pt` — speech bubble detection model  
-
-&nbsp;  - `magiv3/` — directory for the panel detection model  
-
-&nbsp;  - Manga-OCR and inpainting models will be downloaded automatically on first run to their respective cache folders  
-
-
-
----
-
-
-
-\## 🚀 How to Run
-
-
-
-1\. \*\*Run the server\*\*
-
-
-
-&nbsp;  On \*\*Windows\*\*:
-
-&nbsp;  ```bash
-
-&nbsp;  run\_server.bat
-
-&nbsp;  ```
-
-
-
-&nbsp;  On \*\*macOS/Linux\*\* (create a `run\_server.sh`):
-
-&nbsp;  ```sh
-
-&nbsp;  #!/bin/bash
-
-&nbsp;  source .env/bin/activate
-
-&nbsp;  export HF\_HOME="./weights/hf"
-
-&nbsp;  # ... set other environment variables ...
-
-&nbsp;  uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
-
-&nbsp;  ```
-
-
-
-2\. The server will start on `http://0.0.0.0:8000`.  
-
-&nbsp;  When it starts, it will print the local network IP address you should use in the Tauri application to connect from your phone.
-
-
-
-&nbsp;  Example:
-
-&nbsp;  ```
-
-&nbsp;  ==> http://192.168.1.5:8000 <==
-
-&nbsp;  ```
-
-
-
----
-
-
-
-\## 📡 API Endpoints
-
-
-
-\- `POST /detect\_panels` — Detects comic panels  
-
-\- `POST /detect\_text\_areas` — Detects speech bubbles  
-
-\- `POST /recognize\_images\_batch` — Performs OCR on a batch of cropped bubble images  
-
-\- `POST /inpaint\_auto\_text` — Automatically inpaints text within specified bounding boxes  
-
-\- `POST /v1/chat/completions` — Proxies translation requests to an OpenAI-compatible API  
-
-
-
+## 📡 API Endpoints
+
+- `POST /detect_panels` — Detects comic panels  
+- `POST /detect_text_areas` — Detects speech bubbles  
+- `POST /recognize_images_batch` — Performs OCR on a batch of cropped bubble images  
+- `POST /inpaint_auto_text` — Automatically inpaints text within specified bounding boxes  
+- `POST /v1/chat/completions` — Proxies translation requests to an OpenAI-compatible API  
