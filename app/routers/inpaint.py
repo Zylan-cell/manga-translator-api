@@ -1,28 +1,13 @@
 from fastapi import APIRouter, HTTPException, Depends, Request
-from pydantic import BaseModel
-from typing import List, Optional
 
 from app.services.inpaint_service import InpaintService
 from app.logger import app_logger
+from app.models.dto import InpaintRequest, InpaintAutoTextRequest, InpaintResponse
 
 router = APIRouter()
 
 def get_service(request: Request) -> InpaintService:
     return request.app.state.services["inpaint"]
-
-class InpaintRequest(BaseModel):
-    image_data: str
-    mask_data: str
-
-class InpaintResponse(BaseModel):
-    image_data: str
-    mask_data: Optional[str] = None
-    
-class InpaintAutoTextRequest(BaseModel):
-    image_data: str
-    boxes: Optional[List[List[int]]] = None
-    dilate: Optional[int] = 2
-    return_mask: Optional[bool] = False
 
 @router.post("/inpaint", response_model=InpaintResponse)
 async def inpaint(req: InpaintRequest, svc: InpaintService = Depends(get_service)):
