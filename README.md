@@ -9,19 +9,6 @@ FastAPI service for manga processing:
 
 Tested on: Python 3.11.0 (Windows)
 
-Important
-- All models are loaded from the local `weights/` folder (no global HF caches in the user profile).
-- Backend is pure Python (no Android).
-- Input images can be base64 with or without a `data:` prefix. Responses return raw base64 (no prefix).
-
-Contents
-- Requirements
-- Install & Run (uv recommended)
-- Weights layout
-- Configuration
-- Endpoints
-- Troubleshooting
-
 ## Requirements
 - Windows, Python 3.11.x (recommended)
 - NVIDIA GPU for acceleration (optional). CPU works but is slower.
@@ -46,26 +33,15 @@ uv pip install torch torchvision --index-url https://download.pytorch.org/whl/cu
 ```
 - CPU only:
 ```powershell
-uv pip install --index-url https://download.pytorch.org/whl/cpu torch torchvision torchaudio
+uv pip install --index-url https://download.pytorch.org/whl/cpu torch torchvision
 ```
 
 4) Install the rest of the dependencies
-- Remove torch/torchvision/torchaudio from `requirements.txt` if present (to not override step 3).
 ```powershell
 uv pip install -r requirements.txt
 ```
 
-5) Run the server
-```powershell
-python main.py
-# Dev mode with autoreload:
-python main.py --reload
-```
-- Default address: http://localhost:8000
-
-## Weights layout
-
-Place your models under `weights/`:
+5) Place your models under `weights/` (Download from Release):
 
 ```
 weights/
@@ -81,8 +57,15 @@ weights/
     model.safetensors
     tokenizer.json
     ... (other assets)
-  hf_cache/                   # (optional) local Transformers cache
 ```
+
+6) Run the server
+```powershell
+python main.py
+# Dev mode with autoreload:
+python main.py
+```
+- Default address: http://localhost:8000
 
 Notes:
 - Defaults are set in `app/config.py`. You can override via env vars (see below).
