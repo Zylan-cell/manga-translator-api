@@ -1,91 +1,166 @@
-# Manga Translator - Backend API
+# Manga Processing API (Python)
 
-This is the backend server for the Manga Translator application.  
-It handles heavy-lifting tasks like object detection, optical character recognition (OCR), inpainting, and text translation.  
-The API is built with [FastAPI](https://fastapi.tiangolo.com/).
+FastAPI service for manga processing:
+- Text bubble detection (YOLO)
+- OCR (MangaOCR)
+- Text inpainting (SimpleLaMa)
+- Manga panel detection and ordering (Florence‑2 `magiv3`)
+- Proxy for OpenAI‑compatible chat (e.g., LM Studio)
 
----
+Tested on: Python 3.11.0 (Windows)
 
-## ✨ Features
+Important
+- All models are loaded from the local `weights/` folder (no global HF caches in the user profile).
+- Backend is pure Python (no Android).
+- Input images can be base64 with or without a `data:` prefix. Responses return raw base64 (no prefix).
 
-- **Panel Detection:** Detects comic panels to determine reading order.  
-- **Bubble Detection:** Uses a YOLO model to find speech bubbles in an image.  
-- **Text Recognition (OCR):** Extracts Japanese text from detected bubbles using Manga-OCR.  
-- **Inpainting:** Removes the original text from the bubbles, preparing them for translation.  
-- **Translation:** Connects to an LM Studio instance (or any OpenAI-compatible API) to translate text.  
+Contents
+- Requirements
+- Install & Run (uv recommended)
+- Weights layout
+- Configuration
+- Endpoints
+- Troubleshooting
 
----
+## Requirements
+- Windows, Python 3.11.x (recommended)
+- NVIDIA GPU for acceleration (optional). CPU works but is slower.
 
-## 🛠️ Setup and Installation
+## Install & Run (uv recommended)
 
-### Prerequisites
-
-- Python 3.10+  
-- `pip` and `virtualenv`  
-- Git  
-- (Optional but recommended) NVIDIA GPU with CUDA installed for performance  
-
-### Installation Steps
-
-1. **Clone the repository**
-   ```bash
-   git clone https://github.com/YOUR_USERNAME/manga-translator-api.git
-   cd manga-translator-api
-   ```
-
-2. **Create and activate a virtual environment**
-   ```bash
-   python -m venv .env
-
-   # On Windows
-   .\.env\Scripts\activate
-
-   # On macOS/Linux
-   source .env/bin/activate
-   ```
-
-3. **Install Python dependencies**
-   ```bash
-   pip install -r requirements.txt
-   ```
-
-4. **Download Models**  
-   Place the required models into the `weights/` directory:
-   - `bubbles_yolo.pt` — speech bubble detection model  
-   - `magiv3/` — panel detection model directory  
-   - Manga-OCR and inpainting models will be downloaded automatically on first run  
-
----
-
-## 🚀 How to Run
-
-### Windows
-```bash
-run_server.bat
+1) Install uv (Windows PowerShell)
+```powershell
+powershell -ExecutionPolicy ByPass -c "irm https://astral.sh/uv/install.ps1 | iex"
 ```
 
-### macOS/Linux (example `run_server.sh`)
-```sh
-#!/bin/bash
-source .env/bin/activate
-export HF_HOME="./weights/hf"
-# ... set other environment variables ...
-uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+2) Create and activate a virtual environment
+```powershell
+python -m venv .env
+.env\scripts\activate
 ```
 
-The server will start on `http://0.0.0.0:8000`.  
-When it starts, it prints the local network IP to connect from your phone:
+3) Install PyTorch
+- CUDA 12.9 (GPU):
+```powershell
+uv pip install torch torchvision --index-url https://download.pytorch.org/whl/cu129
+```
+- CPU only:
+```powershell
+uv pip install --index-url https://download.pytorch.org/whl/cpu torch torchvision torchaudio
+```
+
+4) Install the rest of the dependencies
+- Remove torch/torchvision/torchaudio from `requirements.txt` if present (to not override step 3).
+```powershell
+uv pip install -r requirements.txt
+```
+
+5) Run the server
+```powershell
+python main.py
+# Dev mode with autoreload:
+python main.py --reload
+```
+- Default address: http://localhost:8000
+
+## Weights layout
+
+Place your models under `weights/`:
 
 ```
-==> http://192.168.1.5:8000 <==
+weights/
+  bubbles_yolo.pt             # YOLO model for bubble detection
+  manga-ocr-base/             # local MangaOCR model folder (from HF)
+    config.json
+    preprocessor_config.json
+    tokenizer.json
+    model.safetensors         # recommended (avoid .bin)
+    ... (other tokenizer files)
+  magiv3/                     # Florence-2 panel model folder (from HF)
+    config.json
+    model.safetensors
+    tokenizer.json
+    ... (other assets)
+  hf_cache/                   # (optional) local Transformers cache
 ```
 
----
+Notes:
+- Defaults are set in `app/config.py`. You can override via env vars (see below).
+- Using `safetensors` is recommended. If you only have `pytorch_model.bin`, you’ll need `torch>=2.6` due to a security restriction in `torch.load` (CVE-2025-32434).
 
-## 📡 API Endpoints
+## Configuration (env vars)
 
-- `POST /detect_panels` — Detects comic panels  
-- `POST /detect_text_areas` — Detects speech bubbles  
-- `POST /recognize_images_batch` — Performs OCR on a batch of cropped bubble images  
-- `POST /inpaint_auto_text` — Automatically inpaints text within specified bounding boxes  
-- `POST /v1/chat/completions` — Proxies translation requests to an OpenAI-compatible API  
+- API_HOST — default `0.0.0.0`
+- API_PORT — default `8000`
+- YOLO_MODEL_PATH — default `weights/bubbles_yolo.pt`
+- PANEL_MODEL_PATH — default `weights/magiv3`
+- MANGA_OCR_PATH — default `weights/manga-ocr-base`
+- LM_STUDIO_URL — default `http://localhost:1234`
+
+Optional (for fully offline usage):
+- TRANSFORMERS_OFFLINE=1
+- HF_HUB_DISABLE_TELEMETRY=1
+
+## Endpoints
+
+- GET `/` — health message: `{"message": "Manga Processing API is running."}`
+
+Bubble detection (YOLO)
+- POST `/detect_text_areas`
+  - body: `{ "image_data": "<base64 or data:image/...;base64,...>" }`
+  - response: `{ "boxes": [{ "x1": int, "y1": int, "x2": int, "y2": int, "confidence": float }, ...] }`
+
+OCR (MangaOCR)
+- POST `/recognize_image`
+  - body: `{ "image_data": "<base64>" }`
+  - response: `{ "full_text": "..." }`
+- POST `/recognize_images_batch`
+  - body: `{ "images_data": ["<base64>", "<base64>", ...] }`
+  - response: `{ "results": ["...", "...", ...] }`
+
+Inpainting (SimpleLaMa)
+- POST `/inpaint`
+  - body: `{ "image_data": "<base64>", "mask_data": "<base64 PNG mask>" }`
+  - response: `{ "image_data": "<base64 PNG result>" }`
+- POST `/inpaint_auto_text`
+  - body: `{ "image_data": "<base64>", "boxes": [[x1,y1,x2,y2], ...], "dilate": 2, "return_mask": false }`
+  - response: `{ "image_data": "<base64 PNG>", "mask_data": "<base64 PNG or null>" }`
+
+Panel detection (Florence‑2 magiv3)
+- POST `/detect_panels`
+  - body: `{ "image_data": "<base64>" }`
+  - response: `{ "panels": [[x1,y1,x2,y2], ...] }`
+
+Translation proxy (OpenAI-like, e.g., LM Studio)
+- GET `/v1/models`
+- POST `/v1/chat/completions` (supports `stream: true`)
+
+## Troubleshooting
+
+Torch (CUDA/CPU)
+- CUDA 12.9:
+```powershell
+uv pip install torch torchvision --index-url https://download.pytorch.org/whl/cu129
+```
+- CPU:
+```powershell
+uv pip install --index-url https://download.pytorch.org/whl/cpu torch torchvision torchaudio
+```
+
+MangaOCR `.bin` restriction
+- If you see: “upgrade torch to at least v2.6 …” — that’s due to `pytorch_model.bin`.
+  - Use safetensors instead, or
+  - Upgrade torch to >= 2.6 (not always available for all CUDA combos).
+
+Panel model missing deps
+```powershell
+uv pip install einops pytorch_metric_learning timm shapely
+```
+
+Transformers >= 4.50 and custom models
+- Newer Transformers dropped `GenerationMixin` from `PreTrainedModel`, some custom models may break on `.generate`.
+  - Easiest fix: pin Transformers `< 4.50`:
+```powershell
+uv pip install "transformers<4.50" -U
+```
+  - Or patch the custom model (advanced).
