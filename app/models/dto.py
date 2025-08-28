@@ -17,10 +17,16 @@ class PanelDetectionResult(BaseModel):
     panels: List[List[int]]
 
 class ImageRecognitionRequest(BaseModel):
-    image_data: str  # base64
+    image_data: str
+    engine: Optional[str] = "manga"          # "manga" | "easy"
+    langs: Optional[List[str]] = None        # для easyocr, напр. ["ja","en"]
+    auto_rotate: Optional[bool] = True       # автоповорот 0/90/270
 
 class BatchRecognitionRequest(BaseModel):
     images_data: List[str]
+    engine: Optional[str] = "manga"
+    langs: Optional[List[str]] = None
+    auto_rotate: Optional[bool] = True
 
 class BatchRecognitionResponse(BaseModel):
     results: List[str]

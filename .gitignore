@@ -3,3 +3,6 @@
 *.pyc
 .vscode/
 .idea/
+dist/
+weights/*
+!weights/.gitkeep
