@@ -12,6 +12,20 @@ router = APIRouter()
 def get_service(request: Request) -> OcrService:
     return request.app.state.services["ocr"]
 
+@router.get("/model_info")
+async def get_model_info(svc: OcrService = Depends(get_service)):
+    """Returns information about the loaded MangaOCR model to verify it's using local model."""
+    try:
+        model_info = svc.get_model_info()
+        return {
+            "success": True,
+            "model_info": model_info,
+            "message": "Local model verification" if model_info.get("local_path_exists") else "Local model not found"
+        }
+    except Exception as e:
+        app_logger.error(f"[OCR MODEL INFO] Error: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail=str(e))
+
 @router.post("/recognize_image")
 async def recognize_image(request: ImageRecognitionRequest, svc: OcrService = Depends(get_service)):
     try:

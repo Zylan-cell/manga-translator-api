@@ -4,5 +4,9 @@
 .vscode/
 .idea/
 dist/
+build/
 weights/*
+build.py
+build.bat
+manga-translator-api.spec
 !weights/.gitkeep

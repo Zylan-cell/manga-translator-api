@@ -3,8 +3,7 @@
 FastAPI service for manga processing:
 
 - Text bubble detection (YOLO)
-- OCR (MangaOCR)
-- Text inpainting (SimpleLaMa)
+- OCR (MangaOCR - Japanese text recognition only)
 - Manga panel detection and ordering (Florence‑2 `magiv3`)
 - Proxy for OpenAI‑compatible chat (e.g., LM Studio)
 
@@ -15,7 +14,19 @@ Tested on: Python 3.11.0 (Windows)
 - Windows, Python 3.11.x (recommended)
 - NVIDIA GPU for acceleration (optional). CPU works but is slower.
 
-## Install & Run (uv recommended)
+## Install & Run
+
+### Option A: Fast installation (recommended)
+
+1. Download [manga-translator-api.7z.001](https://github.com/Zylan-cell/manga-translator-api/releases/download/release/manga-translator-api.7z.001), [manga-translator-api.7z.002](https://github.com/Zylan-cell/manga-translator-api/releases/download/release/manga-translator-api.7z.002) from the Release section.
+2. Extract `manga-translator-api.7z.001`. It will automatically merge both parts into the full project folder.
+3. Continue from step **6. Run the server** below.
+
+This is simpler and much faster than installing all dependencies manually.
+
+---
+
+### Option B: Manual installation
 
 1. Install uv (Windows PowerShell)
 
@@ -55,7 +66,7 @@ uv pip install -r requirements.txt
 ```
 weights/
   bubbles_yolo.pt             # YOLO model for bubble detection
-  manga-ocr-base/             # local MangaOCR model folder (from HF)
+  manga-ocr-base/             # LOCAL MangaOCR model folder (REQUIRED)
     config.json
     preprocessor_config.json
     tokenizer.json
@@ -107,23 +118,15 @@ Bubble detection (YOLO)
   - body: `{ "image_data": "<base64 or data:image/...;base64,...>" }`
   - response: `{ "boxes": [{ "x1": int, "y1": int, "x2": int, "y2": int, "confidence": float }, ...] }`
 
-OCR (MangaOCR)
+OCR (MangaOCR - Japanese text only)
 
+- GET `/model_info` — Verify which MangaOCR model is loaded (local vs downloaded)
 - POST `/recognize_image`
   - body: `{ "image_data": "<base64>" }`
   - response: `{ "full_text": "..." }`
 - POST `/recognize_images_batch`
   - body: `{ "images_data": ["<base64>", "<base64>", ...] }`
   - response: `{ "results": ["...", "...", ...] }`
-
-Inpainting (SimpleLaMa)
-
-- POST `/inpaint`
-  - body: `{ "image_data": "<base64>", "mask_data": "<base64 PNG mask>" }`
-  - response: `{ "image_data": "<base64 PNG result>" }`
-- POST `/inpaint_auto_text`
-  - body: `{ "image_data": "<base64>", "boxes": [[x1,y1,x2,y2], ...], "dilate": 2, "return_mask": false }`
-  - response: `{ "image_data": "<base64 PNG>", "mask_data": "<base64 PNG or null>" }`
 
 Panel detection (Florence‑2 magiv3)
 
@@ -135,42 +138,3 @@ Translation proxy (OpenAI-like, e.g., LM Studio)
 
 - GET `/v1/models`
 - POST `/v1/chat/completions` (supports `stream: true`)
-
-## Troubleshooting
-
-Torch (CUDA/CPU)
-
-- CUDA 12.9:
-
-```powershell
-uv pip install torch torchvision --index-url https://download.pytorch.org/whl/cu129
-```
-
-- CPU:
-
-```powershell
-uv pip install --index-url https://download.pytorch.org/whl/cpu torch torchvision torchaudio
-```
-
-MangaOCR `.bin` restriction
-
-- If you see: “upgrade torch to at least v2.6 …” — that’s due to `pytorch_model.bin`.
-  - Use safetensors instead, or
-  - Upgrade torch to >= 2.6 (not always available for all CUDA combos).
-
-Panel model missing deps
-
-```powershell
-uv pip install einops pytorch_metric_learning timm shapely
-```
-
-Transformers >= 4.50 and custom models
-
-- Newer Transformers dropped `GenerationMixin` from `PreTrainedModel`, some custom models may break on `.generate`.
-  - Easiest fix: pin Transformers `< 4.50`:
-
-```powershell
-uv pip install "transformers<4.50" -U
-```
-
-- Or patch the custom model (advanced).

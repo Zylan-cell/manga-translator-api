@@ -8,23 +8,9 @@ class Settings:
     # Пути к моделям (все из ./weights)
     YOLO_MODEL_PATH: str = os.getenv("YOLO_MODEL_PATH", str(WEIGHTS_DIR / "bubbles_yolo.pt"))
     PANEL_MODEL_PATH: str = os.getenv("PANEL_MODEL_PATH", str(WEIGHTS_DIR / "magiv3"))
-    # Локальная папка модели MangaOCR (скачайте с HF и положите сюда)
+    # Локальная папка модели MangaOCR (ОБЯЗАТЕЛЬНО должна существовать в weights/)
+    # Структура: weights/manga-ocr-base/config.json, model.safetensors, tokenizer.json и т.д.
     MANGA_OCR_PATH: str = os.getenv("MANGA_OCR_PATH", str(WEIGHTS_DIR / "manga-ocr-base"))
-    EASYOCR_MODEL_DIR: str = os.getenv("EASYOCR_MODEL_DIR", str(WEIGHTS_DIR / "easyocr"))
-
-     # RapidOCR (ONNX) — укажи локальные файлы в weights/rapidocr
-    RAPID_DET_MODEL_PATH: str = os.getenv(
-        "RAPID_DET_MODEL_PATH",
-        str(WEIGHTS_DIR / "rapidocr" / "ch_PP-OCRv3_det_infer.onnx")
-    )
-    RAPID_CLS_MODEL_PATH: str = os.getenv(
-        "RAPID_CLS_MODEL_PATH",
-        str(WEIGHTS_DIR / "rapidocr" / "ch_ppocr_mobile_v2.0_cls_infer.onnx")
-    )
-    RAPID_REC_MODEL_PATH: str = os.getenv(
-        "RAPID_REC_MODEL_PATH",
-        str(WEIGHTS_DIR / "rapidocr" / "en_PP-OCRv3_rec_infer.onnx")  # EN ONLY
-    )
 
     # Настройки сервера
     API_HOST: str = os.getenv("API_HOST", "0.0.0.0")
@@ -34,3 +20,33 @@ class Settings:
     LM_STUDIO_URL: str = os.getenv("LM_STUDIO_URL", "http://localhost:1234")
 
 settings = Settings()
+
+# Валидация на старте: проверяем что локальная модель существует
+def validate_local_model():
+    """Validates that the local MangaOCR model exists and is properly configured."""
+    manga_path = settings.MANGA_OCR_PATH
+    
+    if not os.path.exists(manga_path):
+        raise RuntimeError(
+            f"❌ Local MangaOCR model not found at: {manga_path}\n"
+            f"Please download the model and place it in the weights/manga-ocr-base/ folder.\n"
+            f"Expected structure:\n"
+            f"  weights/manga-ocr-base/\n"
+            f"    ├── config.json\n"
+            f"    ├── model.safetensors (or pytorch_model.bin)\n"
+            f"    ├── tokenizer.json\n"
+            f"    └── ... (other files)"
+        )
+    
+    config_path = os.path.join(manga_path, "config.json")
+    if not os.path.exists(config_path):
+        raise RuntimeError(
+            f"❌ Invalid MangaOCR model at: {manga_path}\n"
+            f"Missing config.json file. Please ensure you have the complete model."
+        )
+    
+    print(f"✅ Local MangaOCR model validated at: {os.path.abspath(manga_path)}")
+    return True
+
+# Выполняем валидацию при импорте модуля
+validate_local_model()

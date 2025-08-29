@@ -31,25 +31,6 @@ class BatchRecognitionRequest(BaseModel):
 class BatchRecognitionResponse(BaseModel):
     results: List[str]
 
-# Inpaint
-class InpaintRequest(BaseModel):
-    image_data: str
-    mask_data: str
-
-class InpaintAutoTextRequest(BaseModel):
-    image_data: str
-    boxes: Optional[List[List[int]]] = None
-    long_size: Optional[int] = 1280
-    text_threshold: Optional[float] = 0.7
-    link_threshold: Optional[float] = 0.4
-    low_text: Optional[float] = 0.4
-    dilate: Optional[int] = 2
-    return_mask: Optional[bool] = False
-
-class InpaintResponse(BaseModel):
-    image_data: str
-    mask_data: Optional[str] = None
-
 # LM Studio (OpenAI-like)
 class ChatMessage(BaseModel):
     role: str
