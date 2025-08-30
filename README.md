@@ -18,7 +18,7 @@ Tested on: Python 3.11.0 (Windows)
 
 ### Option A: Fast installation (recommended)
 
-1. Download [manga-translator-api.7z.001](https://github.com/Zylan-cell/manga-translator-api/releases/download/release/manga-translator-api.7z.001), [manga-translator-api.7z.002](https://github.com/Zylan-cell/manga-translator-api/releases/download/release/manga-translator-api.7z.002) from the Release section.
+1. Download [manga-translator-api.7z.001](https://github.com/Zylan-cell/manga-translator-api/releases/download/release/manga-translator-api.7z.001), [manga-translator-api.7z.002](https://github.com/Zylan-cell/manga-translator-api/releases/download/release/manga-translator-api.7z.002), [manga-translator-api.7z.003](https://github.com/Zylan-cell/manga-translator-api/releases/download/release/manga-translator-api.7z.003), [manga-translator-api.7z.004](https://github.com/Zylan-cell/manga-translator-api/releases/download/release/manga-translator-api.7z.004) from the Release section.
 2. Extract `manga-translator-api.7z.001`. It will automatically merge both parts into the full project folder.
 3. Start ``run.bat``
 
