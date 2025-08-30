@@ -20,7 +20,7 @@ Tested on: Python 3.11.0 (Windows)
 
 1. Download [manga-translator-api.7z.001](https://github.com/Zylan-cell/manga-translator-api/releases/download/release/manga-translator-api.7z.001), [manga-translator-api.7z.002](https://github.com/Zylan-cell/manga-translator-api/releases/download/release/manga-translator-api.7z.002) from the Release section.
 2. Extract `manga-translator-api.7z.001`. It will automatically merge both parts into the full project folder.
-3. Continue from step **6. Run the server** below.
+3. Start ``run.bat``
 
 This is simpler and much faster than installing all dependencies manually.
 
