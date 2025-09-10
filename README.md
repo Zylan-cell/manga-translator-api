@@ -65,8 +65,6 @@ uv pip install -r requirements.txt
 
 ```powershell
 python main.py
-# Dev mode with autoreload:
-python main.py
 ```
 
 - Default address: http://localhost:8000
