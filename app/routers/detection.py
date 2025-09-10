@@ -15,7 +15,8 @@ async def detect_text_areas(
     svc: DetectionService = Depends(get_service),
 ):
     try:
-        boxes_data = svc.detect(request.image_data)
+        # ИЗМЕНЕНО: Передаем имя модели в сервис
+        boxes_data = svc.detect(request.image_data, model_name=request.detection_model)
         boxes = [BoundingBox(**box) for box in boxes_data]
         return YoloDetectionResult(boxes=boxes)
     except Exception as e:

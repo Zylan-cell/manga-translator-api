@@ -5,11 +5,17 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 WEIGHTS_DIR = BASE_DIR / "weights"
 
 class Settings:
-    # Пути к моделям (все из ./weights)
-    YOLO_MODEL_PATH: str = os.getenv("YOLO_MODEL_PATH", str(WEIGHTS_DIR / "bubbles_yolo.pt"))
+    # ИЗМЕНЕНО: Словарь с доступными моделями детекции
+    # Ключ - это ID, который будет использоваться в API и UI
+    # Значение - путь к файлу модели
+    DETECTION_MODELS = {
+        "bubbles_yolo": str(WEIGHTS_DIR / "bubbles_yolo.pt"),
+        "comic_text_segmenter": str(WEIGHTS_DIR / "comic-text-segmenter.pt"),
+    }
+    DEFAULT_DETECTION_MODEL = "bubbles_yolo"
+
+    # Пути к остальным моделям
     PANEL_MODEL_PATH: str = os.getenv("PANEL_MODEL_PATH", str(WEIGHTS_DIR / "magiv3"))
-    # Локальная папка модели MangaOCR (ОБЯЗАТЕЛЬНО должна существовать в weights/)
-    # Структура: weights/manga-ocr-base/config.json, model.safetensors, tokenizer.json и т.д.
     MANGA_OCR_PATH: str = os.getenv("MANGA_OCR_PATH", str(WEIGHTS_DIR / "manga-ocr-base"))
 
     # Настройки сервера
@@ -21,32 +27,21 @@ class Settings:
 
 settings = Settings()
 
-# Валидация на старте: проверяем что локальная модель существует
-def validate_local_model():
-    """Validates that the local MangaOCR model exists and is properly configured."""
+def validate_models():
+    """Проверяет, что все необходимые файлы моделей существуют."""
+    # Проверка MangaOCR
     manga_path = settings.MANGA_OCR_PATH
+    if not os.path.exists(manga_path) or not os.path.exists(os.path.join(manga_path, "config.json")):
+        raise RuntimeError(f"❌ Модель MangaOCR не найдена или неполная по пути: {manga_path}")
+    print(f"✅ Модель MangaOCR найдена: {os.path.abspath(manga_path)}")
+
+    # Проверка моделей детекции
+    for name, path in settings.DETECTION_MODELS.items():
+        if not os.path.exists(path):
+            raise RuntimeError(f"❌ Модель детекции '{name}' не найдена по пути: {path}")
+        print(f"✅ Модель детекции '{name}' найдена: {os.path.abspath(path)}")
     
-    if not os.path.exists(manga_path):
-        raise RuntimeError(
-            f"❌ Local MangaOCR model not found at: {manga_path}\n"
-            f"Please download the model and place it in the weights/manga-ocr-base/ folder.\n"
-            f"Expected structure:\n"
-            f"  weights/manga-ocr-base/\n"
-            f"    ├── config.json\n"
-            f"    ├── model.safetensors (or pytorch_model.bin)\n"
-            f"    ├── tokenizer.json\n"
-            f"    └── ... (other files)"
-        )
-    
-    config_path = os.path.join(manga_path, "config.json")
-    if not os.path.exists(config_path):
-        raise RuntimeError(
-            f"❌ Invalid MangaOCR model at: {manga_path}\n"
-            f"Missing config.json file. Please ensure you have the complete model."
-        )
-    
-    print(f"✅ Local MangaOCR model validated at: {os.path.abspath(manga_path)}")
     return True
 
 # Выполняем валидацию при импорте модуля
-validate_local_model()
+validate_models()

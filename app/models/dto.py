@@ -12,15 +12,16 @@ class BoundingBox(BaseModel):
 class YoloDetectionResult(BaseModel):
     boxes: List[BoundingBox]
 
-# НОВОЕ: DTO для панелей
 class PanelDetectionResult(BaseModel):
     panels: List[List[int]]
 
 class ImageRecognitionRequest(BaseModel):
     image_data: str
-    engine: Optional[str] = "manga"          # "manga" | "easy"
-    langs: Optional[List[str]] = None        # для easyocr, напр. ["ja","en"]
-    auto_rotate: Optional[bool] = True       # автоповорот 0/90/270
+    engine: Optional[str] = "manga"
+    langs: Optional[List[str]] = None
+    auto_rotate: Optional[bool] = True
+    # ИЗМЕНЕНО: Добавлено поле для выбора модели детекции
+    detection_model: Optional[str] = None
 
 class BatchRecognitionRequest(BaseModel):
     images_data: List[str]
@@ -31,7 +32,7 @@ class BatchRecognitionRequest(BaseModel):
 class BatchRecognitionResponse(BaseModel):
     results: List[str]
 
-# LM Studio (OpenAI-like)
+# ... (остальные DTO без изменений)
 class ChatMessage(BaseModel):
     role: str
     content: str

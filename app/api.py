@@ -7,8 +7,9 @@ from app.services.detection_service import DetectionService
 from app.services.ocr_service import OcrService
 from app.services.panel_service import PanelOrderDetector
 from app.services.translate_service import TranslateService
+from app.services.inpainting_service import InpaintingService
 
-from app.routers import detection, ocr, panel, translate
+from app.routers import detection, ocr, panel, translate, inpainting
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -29,6 +30,9 @@ async def lifespan(app: FastAPI):
 
     app.state.services["translate"] = TranslateService()
     await app.state.services["translate"].initialize()
+
+    app.state.services["inpainting"] = InpaintingService()
+    await app.state.services["inpainting"].initialize()
 
     app_logger.info("--- All services initialized successfully ---")
     try:
@@ -52,6 +56,7 @@ def create_app() -> FastAPI:
     app.include_router(ocr.router)
     app.include_router(panel.router)
     app.include_router(translate.router)
+    app.include_router(inpainting.router)
 
     @app.get("/", tags=["Root"])
     async def root():
@@ -62,13 +67,29 @@ def create_app() -> FastAPI:
         """Health check with model verification."""
         try:
             ocr_service = app.state.services.get("ocr")
+            inpainting_service = app.state.services.get("inpainting")
+            
+            ocr_info = {}
+            inpainting_info = {}
+            
             if ocr_service:
                 model_info = ocr_service.get_model_info()
+                ocr_info = {
+                    "ocr_model": model_info,
+                    "using_local_model": model_info.get("local_path_exists", False) and model_info.get("config_exists", False)
+                }
+            
+            if inpainting_service:
+                inpainting_info = {
+                    "inpainting_available": inpainting_service.is_available(),
+                    "inpainting_model": inpainting_service.get_model_info()
+                }
+            
                 return {
                     "status": "healthy",
                     "message": "API is running",
-                    "ocr_model": model_info,
-                    "using_local_model": model_info.get("local_path_exists", False) and model_info.get("config_exists", False)
+                    **ocr_info,
+                    **inpainting_info
                 }
             else:
                 return {"status": "initializing", "message": "Services not ready"}

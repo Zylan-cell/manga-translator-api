@@ -1,4 +1,4 @@
-from typing import List, Dict, Any
+from typing import List, Dict, Any, Optional
 from ultralytics import YOLO
 
 from app.config import settings
@@ -7,19 +7,35 @@ from app.utils.images import b64_to_pil
 
 class DetectionService:
     def __init__(self):
-        self.yolo_model = None
+        # ИЗМЕНЕНО: Храним несколько моделей в словаре
+        self.models: Dict[str, YOLO] = {}
 
     async def initialize(self):
-        if self.yolo_model is None:
-            app_logger.info(f"Loading Bubble YOLO model from {settings.YOLO_MODEL_PATH}...")
-            self.yolo_model = YOLO(settings.YOLO_MODEL_PATH)
-            app_logger.info("Bubble YOLO model loaded.")
+        # ИЗМЕНЕНО: Загружаем все модели, указанные в конфиге
+        if not self.models:
+            app_logger.info("Loading detection models...")
+            for name, path in settings.DETECTION_MODELS.items():
+                app_logger.info(f" -> Loading model '{name}' from {path}...")
+                self.models[name] = YOLO(path)
+            app_logger.info("All detection models loaded.")
 
-    def detect(self, image_b64: str) -> List[Dict[str, Any]]:
-        if self.yolo_model is None:
-            raise RuntimeError("YOLO service not initialized.")
+    def detect(self, image_b64: str, model_name: Optional[str] = None) -> List[Dict[str, Any]]:
+        # ИЗМЕНЕНО: Выбираем модель по имени
+        if not self.models:
+            raise RuntimeError("Detection service not initialized.")
+
+        # Используем модель по умолчанию, если имя не указано или не найдено
+        active_model_name = model_name if model_name in self.models else settings.DEFAULT_DETECTION_MODEL
+        model = self.models.get(active_model_name)
+        
+        if model is None:
+            # Этого не должно произойти, если конфиг правильный
+            raise RuntimeError(f"Default detection model '{settings.DEFAULT_DETECTION_MODEL}' not found.")
+
+        app_logger.info(f"Running detection with model: '{active_model_name}'")
+        
         image = b64_to_pil(image_b64)
-        results = self.yolo_model(image, verbose=False)
+        results = model(image, verbose=False)
 
         boxes_data: List[Dict[str, Any]] = []
         if results and results[0].boxes is not None:
