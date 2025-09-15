@@ -66,8 +66,9 @@ class OcrService:
         # Проверяем атрибуты модели
         try:
             if hasattr(self.ocr_manga, 'model'):
-                if hasattr(self.ocr_manga.model, 'config'):
-                    config = self.ocr_manga.model.config
+                model_tuple = self.ocr_manga.model
+                if isinstance(model_tuple, tuple) and hasattr(model_tuple[0], 'config'):
+                    config = model_tuple[0].config
                     if hasattr(config, '_name_or_path'):
                         model_info["model_name_or_path"] = config._name_or_path
                     if hasattr(config, 'model_type'):

@@ -4,6 +4,7 @@ from app.services.panel_service import PanelOrderDetector
 from app.logger import app_logger
 from app.models.dto import ImageRecognitionRequest, PanelDetectionResult
 from app.utils.images import b64_to_pil
+from app.models.dto import BatchRecognitionRequest
 
 router = APIRouter()
 
@@ -21,4 +22,21 @@ async def detect_panels(
         return PanelDetectionResult(panels=sorted_panel_bboxes)
     except Exception as e:
         app_logger.error(f"[Panel API] Error: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.post("/detect_panels_batch")
+async def detect_panels_batch(
+    request: BatchRecognitionRequest,
+    svc: PanelOrderDetector = Depends(get_service),
+):
+    try:
+        if not request.images_data:
+            return {"results": []}
+        images = [b64_to_pil(b) for b in request.images_data]
+        # svc already supports batch inference via model.predict_detections_and_associations
+        results = svc.get_sorted_panels_batch(images)
+        return {"results": results}
+    except Exception as e:
+        app_logger.error(f"[Panel API BATCH] Error: {e}", exc_info=True)
         raise HTTPException(status_code=500, detail=str(e))
