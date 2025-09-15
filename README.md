@@ -59,29 +59,11 @@ uv pip install --index-url https://download.pytorch.org/whl/cpu torch torchvisio
 uv pip install -r requirements.txt
 ```
 
-5. Place your models under `weights/` (Download from Release):
-
-```
-weights/
-  bubbles_yolo.pt             # YOLO model for bubble detection
-  manga-ocr-base/             # LOCAL MangaOCR model folder (REQUIRED)
-    config.json
-    preprocessor_config.json
-    tokenizer.json
-    model.safetensors         # recommended (avoid .bin)
-    ... (other tokenizer files)
-  magiv3/                     # Florence-2 panel model folder (from HF)
-    config.json
-    model.safetensors
-    tokenizer.json
-    ... (other assets)
-```
+5. Place models under `weights/` (Download from Release):
 
 6. Run the server
 
 ```powershell
-python main.py
-# Dev mode with autoreload:
 python main.py
 ```
 
